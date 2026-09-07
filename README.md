@@ -9,7 +9,7 @@ A full-stack Next.js (App Router) site for 5Kings Global, backed by MongoDB, wit
 - MongoDB + Mongoose
 - JWT session auth (httpOnly cookie) via `jose` + `bcryptjs`
 - Zod validation on every write
-- Pluggable media storage (`local` / `cloudinary` / `s3`)
+- Media storage entirely in MongoDB via GridFS — no external storage service, no reliance on the local filesystem
 
 ## 1. Prerequisites
 
@@ -44,7 +44,7 @@ Optional (only needed if you want to seed a first admin login — see below):
 |---|---|
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` | If set, `npm run seed` will create one admin user with these credentials. Leave unset to skip and create your admin user another way. **Change the password immediately after first login if you use this.** |
 
-Media storage (`MEDIA_STORAGE_PROVIDER`) defaults to `local`, which stores uploaded files on the server's own disk — fine for development, but on most hosting platforms (Vercel, etc.) the filesystem is not persistent between deploys. For production, set `MEDIA_STORAGE_PROVIDER=cloudinary` or `s3` and fill in the matching credentials block in `.env.example`.
+Media (images, graphics, and directly-uploaded videos) is stored inside MongoDB itself via GridFS — see the "Media storage" section below. There's nothing extra to configure: it uses the same `MONGODB_URI` as everything else, in both development and production.
 
 ## 4. Seed initial content
 
@@ -77,7 +77,6 @@ Admin dashboard: `/admin/login` (protected — not reachable without a valid ses
 - [ ] Real `MONGODB_URI` set (Atlas, not a local/dev database)
 - [ ] Fresh, unique `SESSION_SECRET` generated for this deployment
 - [ ] `NEXT_PUBLIC_SITE_URL` set to the real production domain
-- [ ] Media storage provider set to `cloudinary` or `s3` if deploying to a platform without persistent disk (e.g. Vercel)
 - [ ] Admin password changed from any seeded/default value
 - [ ] Real testimonials, products, and pricing entered through `/admin` (none are pre-loaded)
 - [ ] `npm run build` passes with no errors before deploying
@@ -97,6 +96,21 @@ models/           Mongoose schemas (User, Service, Product, ProductCategory, Boo
 scripts/seed.ts   Idempotent seed script (see above)
 middleware.ts     Route protection for /admin/* and /api/admin/*
 ```
+
+## Media storage
+
+Every file uploaded through the admin Media Library (images, graphics, and directly-uploaded MP4/WebM video) is stored inside MongoDB itself using **GridFS** — MongoDB's built-in mechanism for storing files larger than its 16MB single-document limit, chunked across a `media.files` / `media.chunks` collection pair in the same database as everything else.
+
+There is deliberately no external storage service involved (no Cloudinary, no S3, nothing to sign up for or configure) and no reliance on the local filesystem. That matters specifically because Vercel's production filesystem is read-only and ephemeral — anything an app writes to disk there vanishes as soon as that request finishes, which is exactly what breaks a naive "save to `/public/uploads`" approach in production. GridFS sidesteps that entirely: uploads, reads, and deletes all go through the same `MONGODB_URI` connection the rest of the app already uses.
+
+How it works, end to end:
+
+- **Upload**: `app/api/media/route.ts` (admin-only) reads the file into a buffer and hands it to `lib/storage/gridfs-provider.ts`, which streams it into GridFS and returns a URL like `/api/media/file/<id>`. A `Media` document is created pointing at that URL.
+- **Serve**: `app/api/media/file/[id]/route.ts` is a public route that streams the file's bytes straight back out of GridFS with the correct `Content-Type` and long-lived immutable cache headers (a file's bytes never change after upload — "replacing" an image uploads a new one with a new id rather than overwriting in place). It also supports HTTP Range requests, so uploaded video can be seeked/scrubbed, not just played straight through.
+- **Display**: every `<img>`/`<video>` across the site and admin simply points at that same-origin URL — including through `next/image`, which needs no extra configuration for it since it's not an external host.
+- **Delete**: removing a Media record also deletes its underlying GridFS file (both the `.files` entry and its `.chunks`), so nothing is left orphaned in the database.
+
+This means production deploys (Vercel or otherwise) need zero extra environment variables or third-party setup for media to work correctly — the same `MONGODB_URI` that powers the rest of the app is the whole story.
 
 ## Dependency security
 

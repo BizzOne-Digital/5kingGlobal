@@ -38,7 +38,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
     >
       <Container>
         <div className="flex h-20 items-center justify-between">
-          <Logo logoUrl={settings.logo} light={!isScrolled && !isOpen && pathname === '/'} />
+          <Logo logoUrl={settings.logo} />
 
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV_LINKS.map((link) => (
@@ -47,9 +47,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
                 href={link.href}
                 className={cn(
                   'text-sm font-medium tracking-wide transition-colors',
-                  !isScrolled && pathname === '/'
-                    ? 'text-white/90 hover:text-gold-300'
-                    : 'text-navy-800 hover:text-navy-950',
+                  'text-navy-800 hover:text-navy-950',
                   pathname === link.href && 'text-gold-600'
                 )}
               >
@@ -61,10 +59,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
           <div className="hidden items-center gap-3 lg:flex">
             <a
               href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
-              className={cn(
-                'flex items-center gap-2 text-sm font-medium',
-                !isScrolled && pathname === '/' ? 'text-white' : 'text-navy-800'
-              )}
+              className="flex items-center gap-2 text-sm font-medium text-navy-800"
             >
               <Phone className="h-4 w-4" />
               {settings.phone}
@@ -72,10 +67,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
             <button
               onClick={openCart}
               aria-label="Open cart"
-              className={cn(
-                'relative rounded-sm p-2',
-                !isScrolled && pathname === '/' ? 'text-white' : 'text-navy-900'
-              )}
+              className="relative rounded-sm p-2 text-navy-900"
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
@@ -99,10 +91,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
               )}
             </button>
             <button
-              className={cn(
-                'rounded-sm p-2',
-                !isScrolled && !isOpen && pathname === '/' ? 'text-white' : 'text-navy-900'
-              )}
+              className="rounded-sm p-2 text-navy-900"
               onClick={() => setIsOpen((v) => !v)}
               aria-label={isOpen ? 'Close menu' : 'Open menu'}
             >

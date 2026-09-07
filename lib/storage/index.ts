@@ -1,38 +1,24 @@
 import type { StorageProvider } from './types';
-import { LocalStorageProvider } from './local-provider';
+import { GridFSStorageProvider } from './gridfs-provider';
 
 let cachedProvider: StorageProvider | null = null;
 
 /**
- * Returns the active media storage provider based on MEDIA_STORAGE_PROVIDER.
- * Adding a new provider only requires implementing StorageProvider and
- * registering it here — nothing else in the app needs to change.
+ * Returns the active media storage provider. This project stores all media
+ * (images, graphics, and directly-uploaded videos) in MongoDB itself via
+ * GridFS — there is intentionally no external storage service (Cloudinary,
+ * S3, etc.) and no reliance on the local filesystem, since that would break
+ * on Vercel's read-only, ephemeral production filesystem.
+ *
+ * Kept as a function (rather than a plain export) so a future provider
+ * could be added here without touching any calling code — but for now,
+ * GridFS is the only implementation, deliberately.
  */
 export function getStorageProvider(): StorageProvider {
-  if (cachedProvider) return cachedProvider;
-
-  const providerName = (process.env.MEDIA_STORAGE_PROVIDER || 'local').toLowerCase();
-
-  switch (providerName) {
-    case 'cloudinary': {
-      // Lazy-require so projects that never configure Cloudinary don't pay
-      // for it, and so a misconfigured env doesn't break unrelated routes.
-      const { CloudinaryStorageProvider } = require('./cloudinary-provider');
-      cachedProvider = new CloudinaryStorageProvider();
-      break;
-    }
-    case 's3': {
-      const { S3StorageProvider } = require('./s3-provider');
-      cachedProvider = new S3StorageProvider();
-      break;
-    }
-    case 'local':
-    default:
-      cachedProvider = new LocalStorageProvider();
-      break;
+  if (!cachedProvider) {
+    cachedProvider = new GridFSStorageProvider();
   }
-
-  return cachedProvider as StorageProvider;
+  return cachedProvider;
 }
 
 export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15MB

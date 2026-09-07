@@ -28,7 +28,7 @@ const MediaSchema = new Schema<IMedia>(
     size: { type: Number, required: true, default: 0 },
     alt: { type: String, default: '' },
     folder: { type: String, default: 'general' },
-    provider: { type: String, default: 'local' },
+    provider: { type: String, default: 'mongodb' },
     externalSource: { type: String, enum: ['youtube', 'vimeo', null], default: null },
     externalId: { type: String },
   },
