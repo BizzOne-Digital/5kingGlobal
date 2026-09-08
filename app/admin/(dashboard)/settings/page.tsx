@@ -3,12 +3,45 @@
 import { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { Label, Input, Textarea, FieldHint } from '@/components/ui/FormField';
+import { Label, Input, Textarea } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
+import { ImageUploadField } from '@/components/admin/settings/ImageUploadField';
 import { useToast } from '@/components/providers/ToastProvider';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, ApiError } from '@/lib/api-client';
 import type { SiteSettingsData } from '@/lib/data/settings';
+
+type ZodFlatten = { formErrors?: string[]; fieldErrors?: Record<string, string[]> };
+
+const FIELD_LABELS: Record<string, string> = {
+  businessName: 'Business Name',
+  phone: 'Phone',
+  email: 'Email',
+  logo: 'Logo',
+  favicon: 'Favicon',
+  address: 'Address',
+  serviceAreas: 'Service Areas',
+  footerText: 'Footer Text',
+  defaultSeoTitle: 'Default SEO Title',
+  defaultSeoDescription: 'Default SEO Description',
+  primaryColor: 'Primary Color',
+  secondaryColor: 'Secondary Color',
+};
+
+/** Turns a 422 validation failure into a message that names the actual
+ * field and rule that failed, instead of a generic "couldn't save". */
+function describeSaveError(error: unknown): string {
+  if (error instanceof ApiError && error.status === 422 && error.details) {
+    const flat = error.details as ZodFlatten;
+    const [field, messages] = Object.entries(flat.fieldErrors || {})[0] || [];
+    if (field && messages?.[0]) {
+      return `${FIELD_LABELS[field] || field}: ${messages[0]}`;
+    }
+    if (flat.formErrors?.[0]) return flat.formErrors[0];
+  }
+  if (error instanceof ApiError) return error.message;
+  return 'Unable to save settings';
+}
 
 const SOCIAL_KEYS = ['facebook', 'instagram', 'linkedin', 'twitter', 'youtube'] as const;
 
@@ -46,8 +79,8 @@ export default function AdminSettingsPage() {
       const updated = await apiClient.patch<SiteSettingsData>('/api/admin/settings', payload);
       setForm(updated);
       toast.success('Settings saved');
-    } catch {
-      toast.error('Unable to save settings');
+    } catch (error) {
+      toast.error(describeSaveError(error));
     } finally {
       setIsSaving(false);
     }
@@ -95,15 +128,20 @@ export default function AdminSettingsPage() {
         <section className="rounded-md border border-navy-900/10 bg-white p-6">
           <h2 className="font-display text-lg text-navy-950">Branding</h2>
           <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="logo">Logo URL</Label>
-              <Input id="logo" value={form.logo || ''} onChange={(e) => setForm({ ...form, logo: e.target.value })} />
-              <FieldHint>Upload your logo in Media Library, then paste the URL here.</FieldHint>
-            </div>
-            <div>
-              <Label htmlFor="favicon">Favicon URL</Label>
-              <Input id="favicon" value={form.favicon || ''} onChange={(e) => setForm({ ...form, favicon: e.target.value })} />
-            </div>
+            <ImageUploadField
+              label="Logo"
+              value={form.logo || ''}
+              onChange={(url) => setForm({ ...form, logo: url })}
+              hint="Shown in the site header and footer. A PNG with a transparent background works best."
+              folder="branding"
+            />
+            <ImageUploadField
+              label="Favicon"
+              value={form.favicon || ''}
+              onChange={(url) => setForm({ ...form, favicon: url })}
+              hint="Shown as the browser tab icon. A square image works best."
+              folder="branding"
+            />
             <div>
               <Label htmlFor="primaryColor">Primary Color</Label>
               <div className="flex items-center gap-3">

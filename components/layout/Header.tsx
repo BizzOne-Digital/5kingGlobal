@@ -37,7 +37,7 @@ export function Header({ settings }: { settings: SiteSettingsData }) {
       )}
     >
       <Container>
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex h-28 items-center justify-between">
           <Logo logoUrl={settings.logo} />
 
           <nav className="hidden items-center gap-8 lg:flex">

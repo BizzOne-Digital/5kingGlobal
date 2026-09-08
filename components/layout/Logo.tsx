@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils/cn';
 export function Logo({ logoUrl, light = false }: { logoUrl?: string; light?: boolean }) {
   if (logoUrl) {
     return (
-      <Link href="/" className="relative block h-11 w-40">
+      <Link href="/" className="relative block h-24 w-80">
         <Image src={logoUrl} alt="5Kings Global" fill className="object-contain object-left" priority />
       </Link>
     );

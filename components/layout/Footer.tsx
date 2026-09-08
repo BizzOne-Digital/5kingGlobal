@@ -20,7 +20,7 @@ export function Footer({ settings }: { settings: SiteSettingsData }) {
       <Container className="py-16">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Logo light />
+            <Logo logoUrl={settings.logo} light />
             <p className="mt-5 text-sm leading-relaxed text-white/70">
               One company. Multiple solutions. Security, smart home, electrical, solar, skilled
               trades, and workforce development — delivered with a white glove standard of service.

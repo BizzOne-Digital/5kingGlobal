@@ -42,7 +42,7 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   footerText: '© ' + new Date().getFullYear() + ' 5Kings Global. All Rights Reserved.',
   defaultSeoTitle: '5Kings Global | White Glove Security, Smart Home & Trade Services',
   defaultSeoDescription:
-    '5Kings Global delivers white glove security, smart home, electrical, solar, and skilled trade services for homes and businesses — backed by a nationwide workforce development network.',
+    '5Kings Global delivers white glove security, smart home, electrical, and solar services for homes and businesses — backed by a nationwide workforce network.',
   primaryColor: '#0a1730',
   secondaryColor: '#c19620',
 };

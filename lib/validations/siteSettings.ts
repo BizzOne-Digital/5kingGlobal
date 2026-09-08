@@ -21,8 +21,8 @@ export const siteSettingsSchema = z.object({
     .array(z.object({ day: z.string().trim(), hours: z.string().trim() }))
     .default([]),
   footerText: z.string().trim().max(500).optional().or(z.literal('')),
-  defaultSeoTitle: z.string().trim().min(2).max(70),
-  defaultSeoDescription: z.string().trim().min(2).max(160),
+  defaultSeoTitle: z.string().trim().min(2).max(100),
+  defaultSeoDescription: z.string().trim().min(2).max(300),
   primaryColor: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/).default('#0a1730'),
   secondaryColor: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/).default('#c19620'),
 });
