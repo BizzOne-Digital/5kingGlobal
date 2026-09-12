@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { pricingPlanUpdateSchema } from '@/lib/validations/pricingPlan';
 import { isValidObjectId } from '@/lib/utils/objectId';
 import { jsonError, jsonNotFound, jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,6 +24,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }).lean();
 
     if (!plan) return jsonNotFound('Pricing plan not found');
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(plan)));
   } catch (error) {
     return jsonServerError(error, 'Unable to update pricing plan');
@@ -38,6 +40,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     await connectToDatabase();
     const plan = await PricingPlan.findByIdAndDelete(id).lean();
     if (!plan) return jsonNotFound('Pricing plan not found');
+    revalidatePublicContent();
     return jsonOk({ deleted: true });
   } catch (error) {
     return jsonServerError(error, 'Unable to delete pricing plan');

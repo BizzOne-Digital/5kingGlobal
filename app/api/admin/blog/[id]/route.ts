@@ -5,6 +5,7 @@ import { blogPostUpdateSchema } from '@/lib/validations/blogPost';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { isValidObjectId } from '@/lib/utils/objectId';
 import { jsonError, jsonNotFound, jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -53,6 +54,7 @@ export async function PATCH(request: Request, { params }: Params) {
       runValidators: true,
     }).lean();
 
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(post)));
   } catch (error) {
     return jsonServerError(error, 'Unable to update post');
@@ -68,6 +70,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     await connectToDatabase();
     const post = await BlogPost.findByIdAndDelete(id).lean();
     if (!post) return jsonNotFound('Post not found');
+    revalidatePublicContent();
     return jsonOk({ deleted: true });
   } catch (error) {
     return jsonServerError(error, 'Unable to delete post');

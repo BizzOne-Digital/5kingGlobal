@@ -3,6 +3,7 @@ import PricingPlan from '@/models/PricingPlan';
 import { requireAdmin } from '@/lib/auth/current-user';
 import { pricingPlanSchema } from '@/lib/validations/pricingPlan';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET() {
   try {
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
     const plan = await PricingPlan.create(data);
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(plan)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create pricing plan');

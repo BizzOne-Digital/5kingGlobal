@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { productCategorySchema } from '@/lib/validations/productCategory';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET() {
   try {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     const slug = data.slug ? data.slug : await generateUniqueSlug(ProductCategory, data.name);
 
     const category = await ProductCategory.create({ ...data, slug });
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(category)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create product category');

@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { siteSettingsUpdateSchema } from '@/lib/validations/siteSettings';
 import { DEFAULT_SETTINGS } from '@/lib/data/settings';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET() {
   try {
@@ -30,6 +31,7 @@ export async function PATCH(request: Request) {
       setDefaultsOnInsert: true,
     }).lean();
 
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(settings)));
   } catch (error) {
     return jsonServerError(error, 'Unable to update settings');

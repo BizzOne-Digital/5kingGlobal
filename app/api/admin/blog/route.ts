@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { blogPostSchema } from '@/lib/validations/blogPost';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       slug,
       publishedAt: data.status === 'published' ? new Date() : undefined,
     });
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(post)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create blog post');

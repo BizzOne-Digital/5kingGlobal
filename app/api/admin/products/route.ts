@@ -6,6 +6,7 @@ import { productSchema } from '@/lib/validations/product';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { isValidObjectId } from '@/lib/utils/objectId';
 import { jsonError, jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
       slug,
       category: data.category || undefined,
     });
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(product)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create product');

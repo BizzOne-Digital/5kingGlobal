@@ -3,6 +3,7 @@ import Testimonial from '@/models/Testimonial';
 import { requireAdmin } from '@/lib/auth/current-user';
 import { testimonialSchema } from '@/lib/validations/testimonial';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET() {
   try {
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
     const testimonial = await Testimonial.create(data);
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(testimonial)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create testimonial');

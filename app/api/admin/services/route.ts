@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/current-user';
 import { serviceSchema } from '@/lib/validations/service';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     const slug = data.slug ? data.slug : await generateUniqueSlug(Service, data.title);
 
     const service = await Service.create({ ...data, slug });
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(service)), 201);
   } catch (error) {
     return jsonServerError(error, 'Unable to create service');

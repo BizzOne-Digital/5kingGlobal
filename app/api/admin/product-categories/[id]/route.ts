@@ -6,6 +6,7 @@ import { productCategoryUpdateSchema } from '@/lib/validations/productCategory';
 import { generateUniqueSlug } from '@/lib/utils/unique-slug';
 import { isValidObjectId } from '@/lib/utils/objectId';
 import { jsonError, jsonNotFound, jsonOk, jsonServerError } from '@/lib/utils/api-response';
+import { revalidatePublicContent } from '@/lib/utils/revalidate-public';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -32,6 +33,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }).lean();
 
     if (!category) return jsonNotFound('Category not found');
+    revalidatePublicContent();
     return jsonOk(JSON.parse(JSON.stringify(category)));
   } catch (error) {
     return jsonServerError(error, 'Unable to update product category');
@@ -56,6 +58,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
     const category = await ProductCategory.findByIdAndDelete(id).lean();
     if (!category) return jsonNotFound('Category not found');
+    revalidatePublicContent();
     return jsonOk({ deleted: true });
   } catch (error) {
     return jsonServerError(error, 'Unable to delete product category');
